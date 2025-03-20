@@ -15,3 +15,15 @@ CREATE TABLE IF NOT EXISTS "users" (
 	PRIMARY KEY("iduser" AUTOINCREMENT)
 );
 COMMIT;
+
+
+	SELECT * FROM users;
+
+	SELECT a.idtodolist as id, 
+		   b.loginuser as usuario, 
+		   a.nametodolist as nometarefa, 
+		   a.tasktolist as tarefa, 
+		   a.statustodolist as status  
+	FROM todolist a 
+	INNER JOIN users b ON b.iduser = a.usertodolist;	
+	

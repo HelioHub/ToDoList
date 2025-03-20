@@ -134,3 +134,27 @@ git push -u origin main
 	FROM todolist a 
 	INNER JOIN users b ON b.iduser = a.usertodolist;	
 	
+	
+## Estrutura do Projeto API Rest Horse: EndPoints definindo as rotas
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/EndPoints.png)
+
+	Conexão com o Banco de Dados:
+		Configurar a conexão com o SQLite usando o FireDAC.
+
+	Rotas da API:
+
+		Listar todos os usuários (GET /users).
+		Buscar um usuário por ID (GET /users/:id).
+		Criar um novo usuário (POST /users).
+		Atualizar um usuário (PUT /users/:id).
+		Excluir um usuário (DELETE /users/:id).
+		Listar todas as tarefas (GET /todolist).
+		Buscar uma tarefa por ID (GET /todolist/:id).
+		Criar uma nova tarefa (POST /todolist).
+		Atualizar uma tarefa (PUT /todolist/:id).
+		Excluir uma tarefa (DELETE /todolist/:id).
+
+	Retorno em JSON:
+
+		Todas as respostas serão em formato JSON.	
