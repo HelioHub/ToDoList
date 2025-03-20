@@ -82,11 +82,14 @@ git push -u origin main
 			
 ## Projeto BackEnd Delphi API Rest usando HORSE 
 
-    O Horse e middlewares, funcionalidades de Autenticação e tratamento de JSON: 
+    O Horse e middlewares, funcionalidades de Autenticação, Tratamento de JSON e etc: 
 	
 	https://github.com/HashLoad/horse?tab=readme-ov-file
 	https://github.com/HashLoad/horse-basic-auth
 	https://github.com/HashLoad/jhonson
+	https://github.com/HashLoad/horse-jwt 
+	https://github.com/paolo-rossi/delphi-jose-jwt
+	
 	
 
 ![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/BackEnd.png)
@@ -143,7 +146,6 @@ git push -u origin main
 		Configurar a conexão com o SQLite usando o FireDAC.
 
 	Rotas da API:
-
 		Listar todos os usuários (GET /users).
 		Buscar um usuário por ID (GET /users/:id).
 		Criar um novo usuário (POST /users).
@@ -156,5 +158,11 @@ git push -u origin main
 		Excluir uma tarefa (DELETE /todolist/:id).
 
 	Retorno em JSON:
-
 		Todas as respostas serão em formato JSON.	
+		
+		
+## Implementação da autenticação JWT usando a tabela USERS na API com Horse
+
+	Install horse-jwt
+	https://github.com/HashLoad/horse-jwt 
+		

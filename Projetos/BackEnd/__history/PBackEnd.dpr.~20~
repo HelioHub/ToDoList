@@ -11,10 +11,72 @@ uses
   Horse,
   FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
   FireDAC.Phys.SQLite, // Driver do SQLite
-  FireDAC.Comp.Client;
+  FireDAC.DApt, // Suporte para consultas SQL
+  FireDAC.Stan.Async, // Suporte a operações assíncronas
+  FireDAC.Comp.Client, // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
+  Horse.JWT, // Middleware JWT
+  JOSE.Core.JWT, // Para criar tokens JWT
+  JOSE.Core.Builder; // Para gerar tokens JWT
 
 var
   Conn: TFDConnection;
+
+
+// Método para autenticar o usuário e gerar um token JWT
+procedure OnAuthenticateUser(Req: THorseRequest; Res: THorseResponse);
+var
+  Query: TFDQuery;
+  Body: TJSONObject;
+  Login, Password: string;
+  Token: TJWT;
+begin
+  // Lê o corpo da requisição (JSON com login e password)
+  Body := TJSONObject.ParseJSONValue(Req.Body) as TJSONObject;
+  if not Assigned(Body) then
+  begin
+    Res.Status(THTTPStatus.BadRequest).Send('Invalid JSON');
+    Exit;
+  end;
+
+  try
+    // Extrai login e password do JSON
+    Login := Body.GetValue<string>('login');
+    Password := Body.GetValue<string>('password');
+
+    // Verifica as credenciais no banco de dados
+    Query := TFDQuery.Create(nil);
+    try
+      Query.Connection := Conn; // Usa a conexão já configurada
+      Query.SQL.Text := 'SELECT * FROM users WHERE loginuser = :login AND passworduser = :password';
+      Query.ParamByName('login').AsString := Login;
+      Query.ParamByName('password').AsString := Password;
+      Query.Open;
+
+      if Query.Eof then
+      begin
+        Res.Status(THTTPStatus.Unauthorized).Send('Invalid login or password');
+        Exit;
+      end;
+
+      // Cria um token JWT
+      Token := TJWT.Create;
+      try
+        Token.Claims.SetClaimOfType<string>('user_id', Query.FieldByName('iduser').AsString);
+        Token.Claims.SetClaimOfType<string>('login', Query.FieldByName('loginuser').AsString);
+
+        // Gera o token
+        Res.Send(TJOSE.SHA256CompactToken('your-secret-key', Token));
+      finally
+        Token.Free;
+      end;
+    finally
+      Query.Free;
+    end;
+  finally
+    Body.Free;
+  end;
+end;
+
 
 // Configura a conexão com o SQLite
 procedure SetupConnection;
@@ -26,7 +88,7 @@ begin
 
     // Configura a conexão
     Conn.Params.DriverID := 'SQLite';
-    Conn.Params.Database := 'C:\path\to\your\database.db'; // Altere para o caminho do seu banco de dados
+    Conn.Params.Database := 'C:\ToDoList\DB\dbtodolist.db'; // Altere para o caminho do seu banco de dados
     Conn.Connected := True;
 
     Writeln('Connected to SQLite database!');
@@ -323,6 +385,9 @@ begin
   try
     // Configura a conexão com o SQLite
     SetupConnection;
+
+    // Autenticação
+    THorse.Use(HorseJWT('your-secret-key'));
 
     // Rotas para usuários
     THorse.Get('/users', OnGetUsers);

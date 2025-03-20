@@ -9,7 +9,14 @@ uses
   System.Classes,
   System.JSON,
   Horse,
-  FireDAC.Comp.Client, FireDAC.Phys.SQLite;
+  FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
+  FireDAC.Phys.SQLite, // Driver do SQLite
+  FireDAC.DApt, // Suporte para consultas SQL
+  FireDAC.Stan.Async, // Suporte a operações assíncronas
+  FireDAC.Comp.Client, // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
+  Horse.JWT, // Middleware JWT
+  JOSE.Core.JWT, // Para criar tokens JWT
+  JOSE.Core.Builder; // Para gerar tokens JWT
 
 var
   Conn: TFDConnection;
@@ -18,9 +25,23 @@ var
 procedure SetupConnection;
 begin
   Conn := TFDConnection.Create(nil);
-  Conn.Params.DriverID := 'SQLite';
-  Conn.Params.Database := 'C:\ToDoList\DB\dbtodolist.db'; // Caminho do banco de dados
-  Conn.Connected := True;
+  try
+    // Define o driver SQLite
+    FDManager.AddConnectionDef('SQLite_Def', 'SQLite');
+
+    // Configura a conexão
+    Conn.Params.DriverID := 'SQLite';
+    Conn.Params.Database := 'C:\ToDoList\DB\dbtodolist.db'; // Altere para o caminho do seu banco de dados
+    Conn.Connected := True;
+
+    Writeln('Connected to SQLite database!');
+  except
+    on E: Exception do
+    begin
+      Writeln('Error connecting to database: ', E.Message);
+      raise;
+    end;
+  end;
 end;
 
 // Retorna todos os usuários

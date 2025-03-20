@@ -11,7 +11,9 @@ uses
   Horse,
   FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
   FireDAC.Phys.SQLite, // Driver do SQLite
-  FireDAC.Comp.Client;
+  FireDAC.DApt, // Suporte para consultas SQL
+  FireDAC.Stan.Async, // Suporte a operações assíncronas
+  FireDAC.Comp.Client; // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
 
 var
   Conn: TFDConnection;
