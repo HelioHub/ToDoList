@@ -59,35 +59,78 @@ git push -u origin main
 	
 		Access:
 		-------
-			Login:
-			Password:
+		Login:
+		Senha:
 			
 		Main:
 		-----
-			Users (só que manipula é o User Master o demais apenas visualiza)
-			To-Do List (acessa apenas as tarefas do Login)
+		Users (só que manipula é o User Master o demais apenas visualiza)
+		To-Do List (acessa apenas as tarefas do Login)
 			
 		
-		Users: (INSERT | UPDATE | DELETE)
+		Users: (INCLUIR | ALTERAR | DELETAR)
 		------
-			Id | Name | Login | Status
+		Id | Nome | Login | Status
 		
-		To-Do List: (INSERT | UPDATE | DELETE | REPORT | TRANSFER | CONCLUDE)
+		To-Do List: (INCLUIR | ALTERAR | DELETAR | RELATÓRIO | TRANSFER | CONCLUIR)
 		-----------
-			Filters:- Status
-					- Registration
-					- User Name
-			Id | Registration | User Name | Task Name | Task | Start | Term | Estimated Completion Date | Completion Date | Task Status 
+		Filters:
+			- Status
+			- Registration
+			- User Name
+		Id | Registro | Usuário | Tarefa | Descrição Tarefa | Início | Prazo(dias) | Data Estimada Conclusão | Data de Conclusão | Status 
 			
-	
-
 ## Projeto BackEnd Delphi API Rest usando HORSE 
+
+    O Horse e middlewares, funcionalidades de Autenticação e tratamento de JSON: 
+	
+	https://github.com/HashLoad/horse?tab=readme-ov-file
+	https://github.com/HashLoad/horse-basic-auth
+	https://github.com/HashLoad/jhonson
+	
 
 ![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/BackEnd.png)
 
 
+## Banco de Dados SQLite e DB Browser
 
-
-
+	https://www.sqlite.org/download.html
+	SQLite version 3.49.1.
 	
+	https://sqlitebrowser.org/blog/version-3-13-1-released/
+
+## Scheme do Banco de Dados 
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/DBBrower.png)
+
+	C:\ToDoList\DBToDoList.db
+	
+	BEGIN TRANSACTION;
+	CREATE TABLE IF NOT EXISTS "todolist" (
+		"idtodolist"	INTEGER,
+		"nametodolist"	TEXT,
+		"tasktolist"	TEXT,
+		"usertodolist"	INTEGER,
+		"statustodolist"	INTEGER,
+		PRIMARY KEY("idtodolist" AUTOINCREMENT),
+		CONSTRAINT "fk_user_id" FOREIGN KEY("usertodolist") REFERENCES "users"("iduser")
+	);
+	CREATE TABLE IF NOT EXISTS "users" (
+		"iduser"	INTEGER,
+		"loginuser"	TEXT,
+		"passworduser"	TEXT,
+		PRIMARY KEY("iduser" AUTOINCREMENT)
+	);
+	COMMIT;
+	
+	
+	SELECT * FROM users;
+
+	SELECT a.idtodolist as id, 
+		   b.loginuser as usuario, 
+		   a.nametodolist as nometarefa, 
+		   a.tasktolist as tarefa, 
+		   a.statustodolist as status  
+	FROM todolist a 
+	INNER JOIN users b ON b.iduser = a.usertodolist;	
 	
