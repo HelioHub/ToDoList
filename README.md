@@ -251,7 +251,7 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 ![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Tasks.png)
 		
 		
-## Projeto como todo escopo feito e dentro do prazo de 1 dias:
+## Projeto como todo escopo feito e dentro do prazo de 1 dia:
 
 	Banco de Dados SQLite: Cadastro de Usuários e Tarefas;
 
