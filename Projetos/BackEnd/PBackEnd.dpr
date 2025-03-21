@@ -9,18 +9,82 @@ uses
   System.Classes,
   System.JSON,
   Horse,
+  Horse.Jhonson,
+  Horse.CORS, // Adiciona suporte a CORS
+  Horse.JWT, // Middleware JWT
+  JOSE.Core.JWT, // Para criar tokens JWT
+  JOSE.Core.Builder, // Para gerar tokens JWT
   FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
   FireDAC.Phys.SQLite, // Driver do SQLite
   FireDAC.DApt, // Suporte para consultas SQL
   FireDAC.Stan.Async, // Suporte a operações assíncronas
   FireDAC.Comp.Client, // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
-  Horse.JWT, // Middleware JWT
-  JOSE.Core.JWT, // Para criar tokens JWT
-  JOSE.Core.Builder; // Para gerar tokens JWT
+  System.NetEncoding; // Para decodificar a autenticação básica
 
 var
   Conn: TFDConnection;
+  UseBasicAuth: Boolean = False; // True: Define o padrão como Autenticação Básica
 
+// Função para decodificar a autenticação básica
+function DecodeBasicAuth(const AuthHeader: string; out Username, Password: string): Boolean;
+var
+  Decoded: string;
+  SplitPos: Integer;
+begin
+  Result := False;
+  if AuthHeader.StartsWith('Basic ', True) then
+  begin
+    Decoded := TNetEncoding.Base64.Decode(AuthHeader.Substring(6));
+    SplitPos := Decoded.IndexOf(':');
+    if SplitPos > 0 then
+    begin
+      Username := Decoded.Substring(0, SplitPos);
+      Password := Decoded.Substring(SplitPos + 1);
+      Result := True;
+    end;
+  end;
+end;
+
+// Função para verificar as credenciais no banco de dados
+function CheckAuth(const Username, Password: string): Boolean;
+var
+  Query: TFDQuery;
+begin
+  Query := TFDQuery.Create(nil);
+  try
+    Query.Connection := Conn;
+    Query.SQL.Text := 'SELECT * FROM users WHERE loginuser = :login AND passworduser = :password';
+    Query.ParamByName('login').AsString := Username;
+    Query.ParamByName('password').AsString := Password;
+    Query.Open;
+    Result := not Query.Eof;
+  finally
+    Query.Free;
+  end;
+end;
+
+// Middleware para autenticação básica
+procedure BasicAuthMiddleware(Req: THorseRequest; Res: THorseResponse; Next: TProc);
+var
+  Username, Password: string;
+begin
+  if UseBasicAuth then
+  begin
+    if not DecodeBasicAuth(Req.Headers['Authorization'], Username, Password) then
+    begin
+      Res.Status(THTTPStatus.Unauthorized).Send('Autenticação básica necessária');
+      Exit;
+    end;
+
+    // Verifica as credenciais no banco de dados
+    if not CheckAuth(Username, Password) then
+    begin
+      Res.Status(THTTPStatus.Unauthorized).Send('Credenciais inválidas');
+      Exit;
+    end;
+  end;
+  Next();
+end;
 
 // Método para autenticar o usuário e gerar um token JWT
 procedure OnAuthenticateUser(Req: THorseRequest; Res: THorseResponse);
@@ -30,30 +94,27 @@ var
   Login, Password: string;
   Token: TJWT;
 begin
-  // Lê o corpo da requisição (JSON com login e password)
-  Body := TJSONObject.ParseJSONValue(Req.Body) as TJSONObject;
-  if not Assigned(Body) then
-  begin
-    Res.Status(THTTPStatus.BadRequest).Send('Invalid JSON');
-    Exit;
-  end;
-
+  Writeln('Requisição recebida em /login'); // Log para depuração
   try
-    // Extrai login e password do JSON
-    Login := Body.GetValue<string>('login');
-    Password := Body.GetValue<string>('password');
+    // Lê o corpo da requisição (JSON com login e password)
+    Body := TJSONObject.ParseJSONValue(Req.Body) as TJSONObject;
+    if not Assigned(Body) then
+    begin
+      Res.Status(THTTPStatus.BadRequest).Send('Invalid JSON');
+      Exit;
+    end;
 
-    // Verifica as credenciais no banco de dados
-    Query := TFDQuery.Create(nil);
     try
-      Query.Connection := Conn; // Usa a conexão já configurada
-      Query.SQL.Text := 'SELECT * FROM users WHERE loginuser = :login AND passworduser = :password';
-      Query.ParamByName('login').AsString := Login;
-      Query.ParamByName('password').AsString := Password;
-      Query.Open;
+      // Extrai login e password do JSON
+      Login := Body.GetValue<string>('login');
+      Password := Body.GetValue<string>('password');
 
-      if Query.Eof then
+      Writeln(Format('Tentativa de login: login=%s, password=%s', [Login, Password])); // Log para depuração
+
+      // Verifica as credenciais no banco de dados
+      if not CheckAuth(Login, Password) then
       begin
+        Writeln('Credenciais inválidas'); // Log para depuração
         Res.Status(THTTPStatus.Unauthorized).Send('Invalid login or password');
         Exit;
       end;
@@ -70,10 +131,14 @@ begin
         Token.Free;
       end;
     finally
-      Query.Free;
+      Body.Free;
     end;
-  finally
-    Body.Free;
+  except
+    on E: Exception do
+    begin
+      Writeln('Erro durante a autenticação: ', E.ClassName, ' - ', E.Message); // Log para depuração
+      Res.Status(THTTPStatus.InternalServerError).Send('Internal Server Error: ' + E.Message);
+    end;
   end;
 end;
 
@@ -380,66 +445,162 @@ begin
   end;
 end;
 
+// Configura as rotas protegidas com base na diretiva UseBasicAuth
+procedure SetupProtectedRoutes;
+begin
+  if UseBasicAuth then
+  begin
+    Writeln('Configurando rotas protegidas com Autenticação Básica.');
+    // Aplica apenas o middleware de autenticação básica
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/protected-route',
+        procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send('Esta é uma rota protegida por Autenticação Básica!');
+        end);
+
+    // Rotas para usuários (protegidas por Autenticação Básica)
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/users', OnGetUsers);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/users/:id', OnGetUserById);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Post('/users', OnCreateUser);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Put('/users/:id', OnUpdateUser);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Delete('/users/:id', OnDeleteUser);
+
+    // Rotas para tarefas (protegidas por Autenticação Básica)
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/todolist', OnGetTodoList);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/todolist/:id', OnGetTodoById);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Post('/todolist', OnCreateTodo);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Put('/todolist/:id', OnUpdateTodo);
+
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Delete('/todolist/:id', OnDeleteTodo);
+  end
+  else
+  begin
+    Writeln('Configurando rotas protegidas com Autenticação JWT.');
+    // Aplica apenas o middleware JWT
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/protected-route',
+        procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send('Esta é uma rota protegida por Autenticação JWT!');
+        end);
+
+    // Rotas para usuários (protegidas por JWT)
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/users', OnGetUsers);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/users/:id', OnGetUserById);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Post('/users', OnCreateUser);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Put('/users/:id', OnUpdateUser);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Delete('/users/:id', OnDeleteUser);
+
+    // Rotas para tarefas (protegidas por JWT)
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/todolist', OnGetTodoList);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/todolist/:id', OnGetTodoById);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Post('/todolist', OnCreateTodo);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Put('/todolist/:id', OnUpdateTodo);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Delete('/todolist/:id', OnDeleteTodo);
+  end;
+end;
+
 begin
   try
+    if UseBasicAuth then
+    begin
+      // Aplica o middleware CORS
+      THorse.Use(CORS);
+
+      // Middleware personalizado para depuração
+      THorse.Use(
+        procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+        begin
+          Writeln('Middleware CORS aplicado'); // Log para depuração
+          Next();
+        end);
+
+       // Rota de autenticação (pública)
+       THorse.Post('/login', OnAuthenticateUser);
+    end;
+
     // Configura a conexão com o SQLite
     SetupConnection;
 
-    // Rota de autenticação
-    THorse.Post('/login', OnAuthenticateUser);
-
-    // Middleware JWT para proteger rotas
-    // THorse.Use(HorseJWT('your-secret-key'));
-
-    // Rota protegida
-    THorse.Get('/protected-route',
-      procedure(Req: THorseRequest; Res: THorseResponse)
-      begin
-        try
-          Res.Send('Esta é uma rota protegida!');
-        except
-          on E: Exception do
-          begin
-            Res.Status(THTTPStatus.InternalServerError).Send('Internal Server Error: ' + E.Message);
-          end;
-        end;
-      end);
-
-
-    { Rota protegida (exige autenticação JWT)
-    THorse.Get('/protected-route', HorseJWT('your-secret-key'),
-      procedure(Req: THorseRequest; Res: THorseResponse)
-      begin
-        try
-          Res.Send('Esta é uma rota protegida!');
-        except
-          on E: Exception do
-          begin
-            Res.Status(THTTPStatus.InternalServerError).Send('Internal Server Error: ' + E.Message);
-          end;
-        end;
-      end);
-     }
-
-
-    // Rotas para usuários
-    THorse.Get('/users', OnGetUsers);
-    THorse.Get('/users/:id', OnGetUserById);
-    THorse.Post('/users', OnCreateUser);
-    THorse.Put('/users/:id', OnUpdateUser);
-    THorse.Delete('/users/:id', OnDeleteUser);
-
-    // Rotas para tarefas
-    THorse.Get('/todolist', OnGetTodoList);
-    THorse.Get('/todolist/:id', OnGetTodoById);
-    THorse.Post('/todolist', OnCreateTodo);
-    THorse.Put('/todolist/:id', OnUpdateTodo);
-    THorse.Delete('/todolist/:id', OnDeleteTodo);
+    // Rota de teste (pública)
     THorse.Get('/ping',
       procedure(Req: THorseRequest; Res: THorseResponse)
       begin
         Res.Send('pong');
       end);
+
+    // Configura as rotas protegidas com base na diretiva UseBasicAuth
+    if UseBasicAuth then
+    begin
+      Writeln('Usando Autenticação Básica como padrão.');
+      THorse.Use(BasicAuthMiddleware); // Aplica o middleware de autenticação básica
+    end
+    else
+    begin
+      Writeln('Usando Autenticação JWT.');
+      THorse.Use(HorseJWT('your-secret-key')); // Aplica o middleware JWT
+    end;
+
+    // Configura as rotas protegidas
+    SetupProtectedRoutes;
 
     // Inicia o servidor na porta 9000
     THorse.Listen(9000,
@@ -455,4 +616,3 @@ begin
       Writeln(E.ClassName, ': ', E.Message);
   end;
 end.
-

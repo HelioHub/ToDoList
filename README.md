@@ -36,36 +36,29 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 	Users:
 	-----
 	idUsers
-	NameUsers
 	LoginUsers
 	PasswordUsers
-	StatusUsers (M-Master; N-Normal)
 	
 	
 	ToDoList:
 	--------
 	idToDoList
-	DateRegToDoList
 	UserToDoList
 	NameToDoList
 	TaskToDoList
-	DateStartToDoList
-	TermToDoList
-	DateEndToDoList
-	StatusToDoList (P-Pending| S-Started| C-Completed)
 	
 	Telas: 
 	-----
 	
 		Access:
 		-------
-		Login:
-		Senha:
+			Login:
+			Senha:
 			
 		Main:
 		-----
-		Users (só que manipula é o User Master o demais apenas visualiza)
-		To-Do List (acessa apenas as tarefas do Login)
+			Users (só que manipula é o User Master o demais apenas visualiza)
+			To-Do List (acessa apenas as tarefas do Login)
 			
 		
 		Users: (INCLUIR | ALTERAR | DELETAR)
@@ -89,7 +82,7 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 	https://github.com/HashLoad/jhonson
 	https://github.com/HashLoad/horse-jwt 
 	https://github.com/paolo-rossi/delphi-jose-jwt
-	
+	https://github.com/HashLoad/horse-cors	
 	
 
 ![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/BackEnd.png)
@@ -194,8 +187,73 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 	--Configuração do Projeto React--
 	---------------------------------
 	Instalação do Node.js: https://nodejs.org/.
+	Node.js v22.14.0
 	
+	Criar projeto React:
+		npx create-react-app frontend
+		cd frontend
+		
+	Instale as dependências necessárias:
+		npm install axios react-router-dom
+			axios: Para fazer requisições HTTP à API.
+			react-router-dom: Para gerenciar as rotas da aplicação.
+
+	Inicie o servidor de desenvolvimento:
+		npm start
+		
+	---------------------------------
+	--Estrutura de Pastas--
+	---------------------------------
+	Na pasta src, estrutura de pastas e arquivos:
+		src/
+		├── components/ 
+		│   ├── Header.js
+		│   ├── Footer.js
+		│   ├── Grid.js
+		│   ├── Form.js
+		├── pages/
+		│   ├── Home.js
+		│   ├── Dashboard.js
+		│   ├── Users.js
+		│   ├── Tasks.js
+		├── App.js
+		├── index.js
+			
+	O FrontEnd consome a API criada e implementa um CRUD completo para usuários e tarefas.
+
+	Os componentes são reutilizáveis e o estado é gerenciado com React Hooks.	
 	
-	
+## 2(duas) Autenticações conforme Variável UseBasicAuth no Back-end:
+
+	Uso da Variável UseBasicAuth:
+		A variável UseBasicAuth controla qual middleware de autenticação será aplicado globalmente:
+
+		Se UseBasicAuth for True, o middleware de autenticação básica (BasicAuthMiddleware) será aplicado.
+			Todas as rotas protegidas usarão autenticação básica.
+			
+		Se UseBasicAuth for False, o middleware JWT (HorseJWT) será aplicado.
+			Todas as rotas protegidas usarão autenticação JWT.
+		
+
+## Login, Painel, Views e CRUDs criados dos Users (Usuários) e ToDoList (Lista de Tarefas): 
+
+	----Login----
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Login.png)
+
+	----Painel----
+		Cadastro de Usuários
+		Cadastro de Tarefas
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Dashboard.png)
+
+	----Cadastro_de_Usuários----
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Users.png)
+		
+	----Cadastro_de_Tarefas----
+
+![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Tasks.png)
+		
 		
 		
