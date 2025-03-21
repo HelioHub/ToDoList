@@ -24,13 +24,13 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 
 ## GitHub
 
-git init
-git add README.md
-git commit -m "first commit"
-git branch -M main
-git remote add origin git@github.com:HelioHub/ToDoList.git
-git push -u origin main
-
+	git init
+	git add README.md
+	git commit -m "first commit"
+	git branch -M main
+	git remote add origin git@github.com:HelioHub/ToDoList.git
+	git push -u origin main
+	
 ## Entidades 
 
 	Users:
@@ -165,4 +165,37 @@ git push -u origin main
 
 	Install horse-jwt
 	https://github.com/HashLoad/horse-jwt 
+	
+## FrontEnd usando HTML, CSS, JavaScript e React para consumir a API. 
+
+	Estrutura do projeto em componentes reutilizáveis e utilização React Hooks (useState, useEffect) 
+	para gerenciar o estado e os efeitos colaterais.	
+	
+	------------------------
+	--Estrutura do Projeto--
+	------------------------
+		Páginas:
+			Home: Página de login.
+			Dashboard: Página principal após o login, com opções para acessar o cadastro de usuários e tarefas.
+			Cadastro de Usuários: Página para gerenciar o CRUD de usuários.
+			Cadastro de Tarefas: Página para gerenciar o CRUD de tarefas.
+
+		Componentes Reutilizáveis:
+			Header: Cabeçalho da aplicação.
+			Footer: Rodapé da aplicação.
+			Grid: Componente para exibir dados em uma tabela.
+			Form: Componente para formulários de cadastro e edição.
+
+		React Hooks:
+			useState: Para gerenciar o estado dos componentes.
+			useEffect: Para carregar dados da API quando o componente for montado.	
+		
+	---------------------------------
+	--Configuração do Projeto React--
+	---------------------------------
+	Instalação do Node.js: https://nodejs.org/.
+	
+	
+	
+		
 		
