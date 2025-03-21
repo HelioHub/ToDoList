@@ -63,15 +63,11 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 		
 		Users: (INCLUIR | ALTERAR | DELETAR)
 		------
-		Id | Nome | Login | Status
+			Id (PK) | Nome | Login
 		
-		To-Do List: (INCLUIR | ALTERAR | DELETAR | RELATÓRIO | TRANSFER | CONCLUIR)
+		To-Do List: (INCLUIR | ALTERAR | DELETAR)
 		-----------
-		Filters:
-			- Status
-			- Registration
-			- User Name
-		Id | Registro | Usuário | Tarefa | Descrição Tarefa | Início | Prazo(dias) | Data Estimada Conclusão | Data de Conclusão | Status 
+			Id (PK) | Usuário (FK) | Tarefa | Descrição Tarefa | 
 			
 ## Projeto BackEnd Delphi API Rest usando HORSE 
 
@@ -125,8 +121,7 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 	SELECT a.idtodolist as id, 
 		   b.loginuser as usuario, 
 		   a.nametodolist as nometarefa, 
-		   a.tasktolist as tarefa, 
-		   a.statustodolist as status  
+		   a.tasktolist as tarefa
 	FROM todolist a 
 	INNER JOIN users b ON b.iduser = a.usertodolist;	
 	
@@ -186,52 +181,52 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 	---------------------------------
 	--Configuração do Projeto React--
 	---------------------------------
-	Instalação do Node.js: https://nodejs.org/.
-	Node.js v22.14.0
-	
-	Criar projeto React:
-		npx create-react-app frontend
-		cd frontend
+		Instalação do Node.js: https://nodejs.org/.
+		Node.js v22.14.0
 		
-	Instale as dependências necessárias:
-		npm install axios react-router-dom
-			axios: Para fazer requisições HTTP à API.
-			react-router-dom: Para gerenciar as rotas da aplicação.
+		Criar projeto React:
+			npx create-react-app frontend
+			cd frontend
+			
+		Instale as dependências necessárias:
+			npm install axios react-router-dom
+				axios: Para fazer requisições HTTP à API.
+				react-router-dom: Para gerenciar as rotas da aplicação.
 
-	Inicie o servidor de desenvolvimento:
-		npm start
+		Inicie o servidor de desenvolvimento:
+			npm start
 		
 	---------------------------------
 	--Estrutura de Pastas--
 	---------------------------------
-	Na pasta src, estrutura de pastas e arquivos:
-		src/
-		├── components/ 
-		│   ├── Header.js
-		│   ├── Footer.js
-		│   ├── Grid.js
-		│   ├── Form.js
-		├── pages/
-		│   ├── Home.js
-		│   ├── Dashboard.js
-		│   ├── Users.js
-		│   ├── Tasks.js
-		├── App.js
-		├── index.js
-			
-	O FrontEnd consome a API criada e implementa um CRUD completo para usuários e tarefas.
+		Na pasta src, estrutura de pastas e arquivos:
+			src/
+			├── components/ 
+			│   ├── Header.js
+			│   ├── Footer.js
+			│   ├── Grid.js
+			│   ├── Form.js
+			├── pages/
+			│   ├── Home.js
+			│   ├── Dashboard.js
+			│   ├── Users.js
+			│   ├── Tasks.js
+			├── App.js
+			├── index.js
+				
+		O FrontEnd consome a API criada e implementa um CRUD completo para usuários e tarefas.
 
-	Os componentes são reutilizáveis e o estado é gerenciado com React Hooks.	
+		Os componentes são reutilizáveis e o estado é gerenciado com React Hooks.	
 	
 ## 2(duas) Autenticações conforme Variável UseBasicAuth no Back-end:
 
 	Uso da Variável UseBasicAuth:
 		A variável UseBasicAuth controla qual middleware de autenticação será aplicado globalmente:
 
-		Se UseBasicAuth for True, o middleware de autenticação básica (BasicAuthMiddleware) será aplicado.
+		Se UseBasicAuth for True, o middleware de autenticação básica (BasicAuthMiddleware) 
 			Todas as rotas protegidas usarão autenticação básica.
 			
-		Se UseBasicAuth for False, o middleware JWT (HorseJWT) será aplicado.
+		Se UseBasicAuth for False, o middleware JWT (HorseJWT)
 			Todas as rotas protegidas usarão autenticação JWT.
 		
 
@@ -256,4 +251,13 @@ Criar uma aplicação simples de lista de tarefas (To-Do List) com controle de u
 ![## PD](https://github.com/HelioHub/ToDoList/blob/main/Imagens/Tasks.png)
 		
 		
-		
+## Projeto como todo escopo feito e dentro do prazo de 1 dias:
+
+	Banco de Dados SQLite: Cadastro de Usuários e Tarefas;
+
+	BackEnd: API em Delphi utilizando Framework HORSE;
+
+	FrontEnd: Usando JavaScript, componentes reutilizáveis e utilização React Hooks;
+
+	Autenticação de Usuário: Autenticação Básica no banco e JWT gerando TOKEN.
+
