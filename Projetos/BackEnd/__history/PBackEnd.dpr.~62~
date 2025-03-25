@@ -23,7 +23,7 @@ uses
 
 var
   Conn: TFDConnection;
-  UseBasicAuth: Boolean = True; // DIRETIVA: Define o padrão como Autenticação Básica
+  UseBasicAuth: Boolean = False; // True: Define o padrão como Autenticação Básica
 
 // Função para decodificar a autenticação básica
 function DecodeBasicAuth(const AuthHeader: string; out Username, Password: string): Boolean;
@@ -557,9 +557,10 @@ begin
       .Delete('/todolist/:id', OnDeleteTodo);
   end;
 end;
+
 begin
   try
-    if Not UseBasicAuth then
+    if not UseBasicAuth then
     begin
       // Aplica o middleware CORS
       THorse.Use(CORS);
@@ -571,13 +572,13 @@ begin
           Writeln('Middleware CORS aplicado'); // Log para depuração
           Next();
         end);
+
+       // Rota de autenticação (pública)
+       THorse.Post('/login', OnAuthenticateUser);
     end;
 
     // Configura a conexão com o SQLite
     SetupConnection;
-
-    // Rota de autenticação (pública)
-    THorse.Post('/login', OnAuthenticateUser);
 
     // Rota de teste (pública)
     THorse.Get('/ping',

@@ -10,20 +10,23 @@ uses
   System.JSON,
   Horse,
   Horse.Jhonson,
-  Horse.CORS, // Adiciona suporte a CORS
-  Horse.JWT, // Middleware JWT
-  JOSE.Core.JWT, // Para criar tokens JWT
-  JOSE.Core.Builder, // Para gerar tokens JWT
-  FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
-  FireDAC.Phys.SQLite, // Driver do SQLite
-  FireDAC.DApt, // Suporte para consultas SQL
-  FireDAC.Stan.Async, // Suporte a operações assíncronas
-  FireDAC.Comp.Client, // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
-  System.NetEncoding; // Para decodificar a autenticação básica
+  Horse.CORS,
+  Horse.JWT,
+  JOSE.Core.JWT,
+  JOSE.Core.Builder,
+  FireDAC.Stan.Def,
+  FireDAC.Phys.SQLite,
+  FireDAC.DApt,
+  FireDAC.Stan.Async,
+  FireDAC.Comp.Client,
+  System.NetEncoding,
+  BackEndBack in 'BackEndBack.pas';
+
+// Para decodificar a autenticação básica
 
 var
   Conn: TFDConnection;
-  UseBasicAuth: Boolean = True; // DIRETIVA: Define o padrão como Autenticação Básica
+  UseBasicAuth: Boolean = False; // True: Define o padrão como Autenticação Básica
 
 // Função para decodificar a autenticação básica
 function DecodeBasicAuth(const AuthHeader: string; out Username, Password: string): Boolean;
@@ -560,27 +563,25 @@ end;
 
 begin
   try
-    // Configura o middleware CORS
-    THorse.Use(CORS(
-      TJSONObject.Create
-        .AddPair('Origin', 'http://localhost:3000') // Permite requisições do frontend
-        .AddPair('Methods', 'GET, POST, PUT, DELETE') // Métodos permitidos
-        .AddPair('Headers', 'Content-Type, Authorization') // Headers permitidos
-    ));
+    if not UseBasicAuth then
+    begin
+      // Aplica o middleware CORS
+      THorse.Use(CORS);
 
-    // Middleware personalizado para depuração
-    THorse.Use(
-      procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
-      begin
-        Writeln('Middleware CORS aplicado'); // Log para depuração
-        Next();
-      end);
+      // Middleware personalizado para depuração
+      THorse.Use(
+        procedure(Req: THorseRequest; Res: THorseResponse; Next: TProc)
+        begin
+          Writeln('Middleware CORS aplicado'); // Log para depuração
+          Next();
+        end);
+
+       // Rota de autenticação (pública)
+       THorse.Post('/login', OnAuthenticateUser);
+    end;
 
     // Configura a conexão com o SQLite
     SetupConnection;
-
-    // Rota de autenticação (pública)
-    THorse.Post('/login', OnAuthenticateUser);
 
     // Rota de teste (pública)
     THorse.Get('/ping',

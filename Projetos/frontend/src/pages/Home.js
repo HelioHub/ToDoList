@@ -7,26 +7,38 @@ const Home = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-	const handleLogin = async (e) => {
-	  e.preventDefault();
-	  try {
-		console.log('Enviando requisição de login...'); // Log para depuração
-		console.log('Login:', login); // Log para depuração
-		console.log('Password:', password); // Log para depuração
+  // Adicione interceptadores para debug (opcional)
+  axios.interceptors.request.use(request => {
+    console.log('Starting Request', request);
+    return request;
+  });
 
-		const response = await axios.post('http://localhost:9000/login', {
-		  login,
-		  password,
-		});
+  axios.interceptors.response.use(response => {
+    console.log('Response:', response);
+    return response;
+  });
 
-		console.log('Resposta recebida:', response); // Log para depuração
-		localStorage.setItem('token', response.data);
-		navigate('/dashboard');
-	  } catch (error) {
-		console.error('Erro ao fazer login:', error); // Log para depuração
-		alert('Login ou senha inválidos');
-	  }
-	};
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      console.log('Enviando requisição de login...');
+      console.log('Login:', login);
+      console.log('Password:', password);
+
+      // REQUISIÇÃO MODIFICADA PARA USAR O PROXY
+      const response = await axios.post('/api/login', {
+        login,
+        password,
+      });
+
+      console.log('Resposta recebida:', response);
+      localStorage.setItem('token', response.data);
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      alert('Login ou senha inválidos');
+    }
+  };
 
   return (
     <div style={styles.container}>
@@ -38,6 +50,7 @@ const Home = () => {
             type="text"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
+            style={styles.input}
           />
         </div>
         <div style={styles.formGroup}>
@@ -46,14 +59,16 @@ const Home = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
           />
         </div>
-        <button type="submit">Entrar</button>
+        <button type="submit" style={styles.button}>Entrar</button>
       </form>
     </div>
   );
 };
 
+// Estilos melhorados
 const styles = {
   container: {
     display: 'flex',
@@ -61,15 +76,36 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100vh',
+    backgroundColor: '#f5f5f5',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '15px',
+    width: '300px',
+    padding: '20px',
+    backgroundColor: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
   },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '5px',
+  },
+  input: {
+    padding: '8px',
+    border: '1px solid #ddd',
+    borderRadius: '4px',
+  },
+  button: {
+    padding: '10px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    marginTop: '10px',
   },
 };
 

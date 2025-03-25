@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2025/03/23 03:59:58.000.538,C:\Users\hislindo\Documents\Embarcadero\Studio\Projects\Project3.dproj=C:\Projetos\JWT\PJWT.dproj</Transaction>
+    <Transaction>2025/03/23 04:03:03.000.756,=C:\Projetos\JWT\Unit1.pas</Transaction>
+    <Transaction>2025/03/23 04:03:40.000.731,C:\Projetos\JWT\Unit1.pas=C:\Projetos\JWT\api.controller.token.pas</Transaction>
+  </Transactions>
+</BorlandProject>

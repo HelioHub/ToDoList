@@ -1,0 +1,79 @@
+program PJWT;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+uses Horse,
+  Horse.Jhonson, Horse.CORS,
+  System.JSON,
+  JOSE.Core.JWT,
+  JOSE.Core.Builder,
+  System.SysUtils;
+
+Const
+  keysecret = 'your-secret-key';
+
+procedure ConfigureCORS;
+begin
+  THorseCORS
+    .AllowedOrigin('http://localhost:3000')  // Apenas seu frontend
+    .AllowedCredentials(true)
+    .AllowedHeaders('Content-Type, Authorization')
+    .AllowedMethods('POST, GET, OPTIONS')
+    .ExposedHeaders('Content-Disposition')
+    .MaxAge(1728000);
+end;
+
+begin
+  THorse.Post('/login',
+    procedure(Req: THorseRequest; Res: THorseResponse)
+    var
+      LToken: TJWT;
+      LCompactToken: string;
+      Body: TJSONObject;
+      Login, Password: string;
+    begin
+          // Configurar o middleware CORS
+            ConfigureCORS;
+
+            // Registrar outros middlewares
+            THorse.Use(Jhonson);
+            THorse.Use(CORS);
+
+      LToken := TJWT.Create;
+      try
+        // Token claims
+        LToken.Claims.Issuer := 'WiRL REST Library';
+        LToken.Claims.Subject := 'Paolo Rossi';
+        LToken.Claims.Expiration := Now + 1;
+
+        Body := TJSONObject.ParseJSONValue(Req.Body) as TJSONObject;
+        if not Assigned(Body) then
+        begin
+          Res.Status(THTTPStatus.BadRequest).Send('Invalid JSON');
+          Exit;
+        end;
+
+
+        // Extrai login e password do JSON
+        Login := Body.GetValue<string>('login');
+        Password := Body.GetValue<string>('password');
+
+        Writeln(Format('Tentativa de login: login=%s, password=%s', [Login, Password])); // Log para depuração
+
+
+        // Outros claims
+        LToken.Claims.SetClaimOfType<string>('usuario',Login);
+        LToken.Claims.SetClaimOfType<string>('senha',Password);
+
+        // Signing and Compact format creation
+        LCompactToken := TJOSE.SHA256CompactToken(keysecret, LToken);
+        Res.Send(LCompactToken)
+      finally
+        LToken.Free;
+      end;
+      end);
+
+  THorse.Listen(9001);
+end.

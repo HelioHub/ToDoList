@@ -23,7 +23,7 @@ uses
 
 var
   Conn: TFDConnection;
-  UseBasicAuth: Boolean = True; // DIRETIVA: Define o padrão como Autenticação Básica
+  UseBasicAuth: Boolean = False; // True: Define o padrão como Autenticação Básica
 
 // Função para decodificar a autenticação básica
 function DecodeBasicAuth(const AuthHeader: string; out Username, Password: string): Boolean;
@@ -445,74 +445,122 @@ begin
   end;
 end;
 
-// Configura as rotas protegidas
+// Configura as rotas protegidas com base na diretiva UseBasicAuth
 procedure SetupProtectedRoutes;
 begin
-  THorse
-    .Use(BasicAuthMiddleware) // Aplica o middleware de autenticação básica
-    .Use(HorseJWT('your-secret-key')) // Aplica o middleware JWT (opcional)
-    .Get('/protected-route',
-      procedure(Req: THorseRequest; Res: THorseResponse)
-      begin
-        Res.Send('Esta é uma rota protegida!');
-      end);
+  if UseBasicAuth then
+  begin
+    Writeln('Configurando rotas protegidas com Autenticação Básica.');
+    // Aplica apenas o middleware de autenticação básica
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/protected-route',
+        procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send('Esta é uma rota protegida por Autenticação Básica!');
+        end);
 
-  // Rotas para usuários (protegidas)
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Get('/users', OnGetUsers);
+    // Rotas para usuários (protegidas por Autenticação Básica)
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/users', OnGetUsers);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Get('/users/:id', OnGetUserById);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/users/:id', OnGetUserById);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Post('/users', OnCreateUser);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Post('/users', OnCreateUser);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Put('/users/:id', OnUpdateUser);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Put('/users/:id', OnUpdateUser);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Delete('/users/:id', OnDeleteUser);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Delete('/users/:id', OnDeleteUser);
 
-  // Rotas para tarefas (protegidas)
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Get('/todolist', OnGetTodoList);
+    // Rotas para tarefas (protegidas por Autenticação Básica)
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/todolist', OnGetTodoList);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Get('/todolist/:id', OnGetTodoById);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Get('/todolist/:id', OnGetTodoById);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Post('/todolist', OnCreateTodo);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Post('/todolist', OnCreateTodo);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Put('/todolist/:id', OnUpdateTodo);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Put('/todolist/:id', OnUpdateTodo);
 
-  THorse
-    .Use(BasicAuthMiddleware)
-    .Use(HorseJWT('your-secret-key'))
-    .Delete('/todolist/:id', OnDeleteTodo);
+    THorse
+      .Use(BasicAuthMiddleware)
+      .Delete('/todolist/:id', OnDeleteTodo);
+  end
+  else
+  begin
+    Writeln('Configurando rotas protegidas com Autenticação JWT.');
+    // Aplica apenas o middleware JWT
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/protected-route',
+        procedure(Req: THorseRequest; Res: THorseResponse)
+        begin
+          Res.Send('Esta é uma rota protegida por Autenticação JWT!');
+        end);
+
+    // Rotas para usuários (protegidas por JWT)
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/users', OnGetUsers);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/users/:id', OnGetUserById);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Post('/users', OnCreateUser);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Put('/users/:id', OnUpdateUser);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Delete('/users/:id', OnDeleteUser);
+
+    // Rotas para tarefas (protegidas por JWT)
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/todolist', OnGetTodoList);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Get('/todolist/:id', OnGetTodoById);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Post('/todolist', OnCreateTodo);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Put('/todolist/:id', OnUpdateTodo);
+
+    THorse
+      .Use(HorseJWT('your-secret-key'))
+      .Delete('/todolist/:id', OnDeleteTodo);
+  end;
 end;
 
 begin
   try
-    if Not UseBasicAuth then
+    if UseBasicAuth then
     begin
       // Aplica o middleware CORS
       THorse.Use(CORS);
@@ -524,13 +572,13 @@ begin
           Writeln('Middleware CORS aplicado'); // Log para depuração
           Next();
         end);
+
+       // Rota de autenticação (pública)
+       THorse.Post('/login', OnAuthenticateUser);
     end;
 
     // Configura a conexão com o SQLite
     SetupConnection;
-
-    // Rota de autenticação (pública)
-    THorse.Post('/login', OnAuthenticateUser);
 
     // Rota de teste (pública)
     THorse.Get('/ping',

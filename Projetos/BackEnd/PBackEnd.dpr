@@ -10,16 +10,18 @@ uses
   System.JSON,
   Horse,
   Horse.Jhonson,
-  Horse.CORS, // Adiciona suporte a CORS
-  Horse.JWT, // Middleware JWT
-  JOSE.Core.JWT, // Para criar tokens JWT
-  JOSE.Core.Builder, // Para gerar tokens JWT
-  FireDAC.Stan.Def, // Adiciona suporte ao FireDAC
-  FireDAC.Phys.SQLite, // Driver do SQLite
-  FireDAC.DApt, // Suporte para consultas SQL
-  FireDAC.Stan.Async, // Suporte a operações assíncronas
-  FireDAC.Comp.Client, // Componentes do FireDAC (TFDConnection, TFDQuery, etc.)
-  System.NetEncoding; // Para decodificar a autenticação básica
+  Horse.CORS,
+  Horse.JWT,
+  JOSE.Core.JWT,
+  JOSE.Core.Builder,
+  FireDAC.Stan.Def,
+  FireDAC.Phys.SQLite,
+  FireDAC.DApt,
+  FireDAC.Stan.Async,
+  FireDAC.Comp.Client,
+  System.NetEncoding;
+
+// Para decodificar a autenticação básica
 
 var
   Conn: TFDConnection;
@@ -560,7 +562,7 @@ end;
 
 begin
   try
-    if UseBasicAuth then
+    if not UseBasicAuth then
     begin
       // Aplica o middleware CORS
       THorse.Use(CORS);
@@ -574,7 +576,30 @@ begin
         end);
 
        // Rota de autenticação (pública)
-       THorse.Post('/login', OnAuthenticateUser);
+       THorse.Post('/login',
+        procedure(Req: THorseRequest; Res: THorseResponse)
+              var
+                LToken: TJWT;
+                LCompactToken: string;
+              begin
+                LToken := TJWT.Create;
+                try
+                  // Token claims
+                  LToken.Claims.Issuer := 'WiRL REST Library';
+                  LToken.Claims.Subject := 'Paolo Rossi';
+                  LToken.Claims.Expiration := Now + 1;
+
+                  // Outros claims
+                  LToken.Claims.SetClaimOfType<string>('usuario','helio');
+                  LToken.Claims.SetClaimOfType<string>('senha','123');
+
+                  // Signing and Compact format creation
+                  LCompactToken := TJOSE.SHA256CompactToken('your-secret-key', LToken);
+                  Res.Send(LCompactToken)
+                finally
+                  LToken.Free;
+                end;
+        end);
     end;
 
     // Configura a conexão com o SQLite

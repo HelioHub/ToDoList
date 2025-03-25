@@ -1,0 +1,42 @@
+program PJWT;
+
+{$APPTYPE CONSOLE}
+
+{$R *.res}
+
+uses Horse,
+  JOSE.Core.JWT,
+  JOSE.Core.Builder,
+  System.SysUtils;
+
+Const
+  keysecret = 'your-secret-key';
+
+begin
+  THorse.Post('/login',
+    procedure(Req: THorseRequest; Res: THorseResponse)
+    var
+      LToken: TJWT;
+      LCompactToken: string;
+    begin
+      LToken := TJWT.Create;
+      try
+        // Token claims
+        LToken.Claims.Issuer := 'WiRL REST Library';
+        LToken.Claims.Subject := 'Paolo Rossi';
+        LToken.Claims.Expiration := Now + 1;
+
+        // Outros claims
+        LToken.Claims.SetClaimOfType<string>('usuario','helio');
+        LToken.Claims.SetClaimOfType<string>('senha','123');
+
+        // Signing and Compact format creation
+        LCompactToken := TJOSE.SHA256CompactToken(keysecret, LToken);
+        Res.Send(LCompactToken)
+      finally
+        LToken.Free;
+      end;
+      end);
+
+  THorse.Listen(9001);
+end.
